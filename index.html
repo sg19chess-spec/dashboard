@@ -845,75 +845,74 @@
     }
 
     function displayComplaints(data) {
-      const tbody = document.getElementById('tbody');
-      tbody.innerHTML = '';
+  const tbody = document.getElementById('tbody');
+  tbody.innerHTML = '';
 
-      if (data.length === 0) {
-        document.getElementById('noData').style.display = 'block';
-        return;
-      }
+  if (data.length === 0) {
+    document.getElementById('noData').style.display = 'block';
+    return;
+  }
 
-      document.getElementById('tableContainer').style.display = 'block';
+  document.getElementById('tableContainer').style.display = 'block';
 
-      data.forEach(complaint => {
-        const row = document.createElement('tr');
-        
-        const date = new Date(complaint.created_at).toLocaleString('en-IN', {
-          day: '2-digit',
-          month: 'short',
-          hour: '2-digit',
-          minute: '2-digit'
-        });
+  data.forEach(complaint => {
+    const row = document.createElement('tr');
+    
+    const date = new Date(complaint.created_at).toLocaleString('en-IN', {
+      day: '2-digit',
+      month: 'short',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
 
-        const emotionPercent = complaint.emotion || 0;
+    const emotionPercent = complaint.emotion || 0;
 
-        row.innerHTML = `
-          row.innerHTML = `
-  <td>${date}</td>
-  <td style="text-align: center;">
-    ${complaint.call_type === 'inbound' 
-      ? '<span style="color: #1976d2; font-size: 16px; font-weight: bold;" title="Inbound">↓</span>' 
-      : '<span style="color: #ff6b00; font-size: 16px; font-weight: bold;" title="Outbound">↑</span>'}
-  </td>
-  <td><strong>${complaint.name || 'Unknown'}</strong></td>
-          <td>${complaint.ward || '-'}</td>
-          <td>${complaint.category || '-'}</td>
-          <td title="${complaint.complaint}" style="max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-            ${complaint.complaint || 'No complaint text'}
-          </td>
-          <td>
-            <span class="severity-badge severity-${complaint.severity}">
-              ${complaint.severity || 'UNKNOWN'}
-            </span>
-          </td>
-          <td>
-            <div class="emotion-bar">
-              <div class="emotion-fill" style="width: ${emotionPercent}%"></div>
-            </div>
-            <span style="font-size: 10px; color: #666; margin-left: 5px;">${emotionPercent}</span>
-          </td>
-          <td>
-            <select class="status-select status-${complaint.status}" 
-                    onchange="updateStatus('${complaint.id}', this.value)">
-              <option value="pending" ${complaint.status === 'pending' ? 'selected' : ''}>Pending</option>
-              <option value="in_progress" ${complaint.status === 'in_progress' ? 'selected' : ''}>In Progress</option>
-              <option value="resolved" ${complaint.status === 'resolved' ? 'selected' : ''}>Resolved</option>
-              <option value="rejected" ${complaint.status === 'rejected' ? 'selected' : ''}>Rejected</option>
-            </select>
-          </td>
-          <td>
-            ${complaint.recording_url 
-              ? `<audio controls class="audio-player"><source src="${complaint.recording_url}" type="audio/mpeg"></audio>` 
-              : '<span style="color: #999;">No recording</span>'}
-          </td>
-          <td>
-            <button class="view-btn" onclick="viewDetails('${complaint.id}')">View</button>
-          </td>
-        `;
+    row.innerHTML = `
+      <td>${date}</td>
+      <td style="text-align: center;">
+        ${complaint.call_type === 'inbound' 
+          ? '<span style="color: #1976d2; font-size: 16px; font-weight: bold;" title="Inbound">↓</span>' 
+          : '<span style="color: #ff6b00; font-size: 16px; font-weight: bold;" title="Outbound">↑</span>'}
+      </td>
+      <td><strong>${complaint.name || 'Unknown'}</strong></td>
+      <td>${complaint.ward || '-'}</td>
+      <td>${complaint.category || '-'}</td>
+      <td title="${complaint.complaint}" style="max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+        ${complaint.complaint || 'No complaint text'}
+      </td>
+      <td>
+        <span class="severity-badge severity-${complaint.severity}">
+          ${complaint.severity || 'UNKNOWN'}
+        </span>
+      </td>
+      <td>
+        <div class="emotion-bar">
+          <div class="emotion-fill" style="width: ${emotionPercent}%"></div>
+        </div>
+        <span style="font-size: 10px; color: #666; margin-left: 5px;">${emotionPercent}</span>
+      </td>
+      <td>
+        <select class="status-select status-${complaint.status}" 
+                onchange="updateStatus('${complaint.id}', this.value)">
+          <option value="pending" ${complaint.status === 'pending' ? 'selected' : ''}>Pending</option>
+          <option value="in_progress" ${complaint.status === 'in_progress' ? 'selected' : ''}>In Progress</option>
+          <option value="resolved" ${complaint.status === 'resolved' ? 'selected' : ''}>Resolved</option>
+          <option value="rejected" ${complaint.status === 'rejected' ? 'selected' : ''}>Rejected</option>
+        </select>
+      </td>
+      <td>
+        ${complaint.recording_url 
+          ? `<audio controls class="audio-player"><source src="${complaint.recording_url}" type="audio/mpeg"></audio>` 
+          : '<span style="color: #999;">No recording</span>'}
+      </td>
+      <td>
+        <button class="view-btn" onclick="viewDetails('${complaint.id}')">View</button>
+      </td>
+    `;
 
-        tbody.appendChild(row);
-      });
-    }
+    tbody.appendChild(row);
+  });
+}
 
     function applyFilters() {
       const search = document.getElementById('search').value.toLowerCase();
