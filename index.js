@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Complaints Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .login-container {
+      max-width: 400px;
+      margin: 100px auto;
+      background: white;
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+      text-align: center;
+    }
+
+    .login-container h1 {
+      margin-bottom: 10px;
+      color: #1a1a1a;
+    }
+
+    .login-container p {
+      color: #666;
+      margin-bottom: 30px;
+    }
+
+    .login-input {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 16px;
+      margin-bottom: 15px;
+      transition: border-color 0.3s;
+    }
+
+    .login-input:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    .login-btn {
+      width: 100%;
+      padding: 12px;
+      background: #667eea;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    .login-btn:hover {
+      background: #5568d3;
+    }
+
+    .error-msg {
+      color: #f44336;
+      margin-top: 15px;
+      font-size: 14px;
+    }
+
+    .dashboard-container {
+      display: none;
+      max-width: 1400px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      padding: 30px;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    h1 {
+      color: #1a1a1a;
+      margin-bottom: 5px;
+    }
+
+    .subtitle {
+      color: #666;
+      font-size: 14px;
+    }
+
+    .logout-btn {
+      padding: 8px 20px;
+      background: #f44336;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .logout-btn:hover {
+      background: #d32f2f;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin: 20px 0;
+    }
+
+    .stat-card {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+
+    .stat-card.red { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+    .stat-card.orange { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); }
+    .stat-card.yellow { background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%); }
+
+    .stat-card h3 {
+      font-size: 14px;
+      opacity: 0.9;
+      margin-bottom: 8px;
+      font-weight: 500;
+    }
+
+    .stat-card .number {
+      font-size: 36px;
+      font-weight: bold;
+    }
+
+    .filters {
+      display: flex;
+      gap: 15px;
+      margin: 20px 0;
+      flex-wrap: wrap;
+      background: #f8f9fa;
+      padding: 20px;
+      border-radius: 8px;
+    }
+
+    .filter-group {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .filter-group label {
+      font-size: 12px;
+      color: #666;
+      font-weight: 500;
+    }
+
+    input, select {
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 14px;
+      min-width: 150px;
+    }
+
+    button.filter-btn {
+      padding: 10px 20px;
+      background: #667eea;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    button.filter-btn:hover {
+      background: #5568d3;
+    }
+
+    .export-btn {
+      background: #28a745;
+    }
+
+    .export-btn:hover {
+      background: #218838;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+
+    th {
+      background: #f8f9fa;
+      padding: 12px;
+      text-align: left;
+      font-weight: 600;
+      color: #495057;
+      border-bottom: 2px solid #dee2e6;
+      font-size: 13px;
+      position: sticky;
+      top: 0;
+    }
+
+    td {
+      padding: 12px;
+      border-bottom: 1px solid #e9ecef;
+      font-size: 13px;
+    }
+
+    tr:hover {
+      background: #f8f9fa;
+    }
+
+    .severity-badge {
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+      display: inline-block;
+    }
+
+    .severity-RED { background: #fee; color: #c00; }
+    .severity-ORANGE { background: #fff3e0; color: #f57c00; }
+    .severity-YELLOW { background: #fffde7; color: #f9a825; }
+
+    .status-select {
+      padding: 6px 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .status-pending { background: #fff3e0; color: #f57c00; }
+    .status-in_progress { background: #e3f2fd; color: #1976d2; }
+    .status-resolved { background: #e8f5e9; color: #388e3c; }
+    .status-rejected { background: #ffebee; color: #d32f2f; }
+
+    .audio-player {
+      width: 200px;
+      height: 30px;
+    }
+
+    .emotion-bar {
+      width: 60px;
+      height: 8px;
+      background: #e0e0e0;
+      border-radius: 4px;
+      overflow: hidden;
+      display: inline-block;
+      vertical-align: middle;
+    }
+
+    .emotion-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #4caf50, #ff9800, #f44336);
+    }
+
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: #999;
+    }
+
+    .no-data {
+      text-align: center;
+      padding: 40px;
+      color: #999;
+    }
+
+    .view-btn {
+      padding: 6px 12px;
+      font-size: 12px;
+      background: #2196f3;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .view-btn:hover {
+      background: #1976d2;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      z-index: 1000;
+      overflow: auto;
+    }
+
+    .modal-content {
+      background: white;
+      max-width: 700px;
+      margin: 50px auto;
+      padding: 30px;
+      border-radius: 12px;
+      position: relative;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 15px;
+      right: 20px;
+      font-size: 28px;
+      cursor: pointer;
+      color: #999;
+    }
+
+    .modal-close:hover {
+      color: #333;
+    }
+
+    .detail-row {
+      margin: 15px 0;
+      padding: 10px;
+      background: #f8f9fa;
+      border-radius: 6px;
+    }
+
+    .detail-label {
+      font-weight: 600;
+      color: #495057;
+      margin-bottom: 5px;
+    }
+
+    .detail-value {
+      color: #212529;
+    }
+
+    @media (max-width: 768px) {
+      .filters {
+        flex-direction: column;
+      }
+
+      .stat-card .number {
+        font-size: 28px;
+      }
+
+      table {
+        font-size: 11px;
+      }
+
+      th, td {
+        padding: 8px 4px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="loginContainer" class="login-container">
+    <h1>ðŸ” Dashboard Login</h1>
+    <p>Enter password to access complaints dashboard</p>
+    <input type="password" id="passwordInput" class="login-input" placeholder="Enter password" />
+    <button onclick="checkPassword()" class="login-btn">Login</button>
+    <div id="errorMsg" class="error-msg"></div>
+  </div>
+
+  <div id="dashboardContainer" class="dashboard-container">
+    <div class="header">
+      <div>
+        <h1>ðŸ“Š Complaints Dashboard</h1>
+        <p class="subtitle">Real-time complaint monitoring and management</p>
+      </div>
+      <button onclick="logout()" class="logout-btn">ðŸšª Logout</button>
+    </div>
+
+    <div class="stats">
+      <div class="stat-card">
+        <h3>Total Complaints</h3>
+        <div class="number" id="total">0</div>
+      </div>
+      <div class="stat-card red">
+        <h3>ðŸ”´ Urgent (RED)</h3>
+        <div class="number" id="red">0</div>
+      </div>
+      <div class="stat-card orange">
+        <h3>ðŸŸ  High Priority</h3>
+        <div class="number" id="orange">0</div>
+      </div>
+      <div class="stat-card yellow">
+        <h3>ðŸŸ¡ Medium Priority</h3>
+        <div class="number" id="yellow">0</div>
+      </div>
+    </div>
+
+    <div class="filters">
+      <div class="filter-group">
+        <label>Search</label>
+        <input type="text" id="search" placeholder="Name, ward, complaint...">
+      </div>
+
+      <div class="filter-group">
+        <label>Severity</label>
+        <select id="severityFilter">
+          <option value="">All Severities</option>
+          <option value="RED">ðŸ”´ RED</option>
+          <option value="ORANGE">ðŸŸ  ORANGE</option>
+          <option value="YELLOW">ðŸŸ¡ YELLOW</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label>Category</label>
+        <select id="categoryFilter">
+          <option value="">All Categories</option>
+          <option value="Water">Water</option>
+          <option value="Roads">Roads</option>
+          <option value="Electricity">Electricity</option>
+          <option value="Garbage">Garbage</option>
+          <option value="Drainage">Drainage</option>
+          <option value="Lights">Street Lights</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label>Status</label>
+        <select id="statusFilter">
+          <option value="">All Statuses</option>
+          <option value="pending">Pending</option>
+          <option value="in_progress">In Progress</option>
+          <option value="resolved">Resolved</option>
+          <option value="rejected">Rejected</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label>Ward</label>
+        <input type="text" id="wardFilter" placeholder="Ward...">
+      </div>
+
+      <div class="filter-group" style="justify-content: flex-end;">
+        <label>&nbsp;</label>
+        <button class="filter-btn" onclick="applyFilters()">ðŸ” Filter</button>
+      </div>
+
+      <div class="filter-group" style="justify-content: flex-end;">
+        <label>&nbsp;</label>
+        <button class="filter-btn export-btn" onclick="exportToCSV()">ðŸ“¥ Export</button>
+      </div>
+    </div>
+
+    <div id="loading" class="loading">Loading complaints...</div>
+
+    <div id="tableContainer" style="display: none; overflow-x: auto;">
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Name</th>
+            <th>Ward</th>
+            <th>Category</th>
+            <th>Complaint</th>
+            <th>Severity</th>
+            <th>Emotion</th>
+            <th>Status</th>
+            <th>Recording</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+
+    <div id="noData" class="no-data" style="display: none;">
+      No complaints found. Try adjusting your filters.
+    </div>
+  </div>
+
+  <div id="detailsModal" class="modal" onclick="closeModal(event)">
+    <div class="modal-content" onclick="event.stopPropagation()">
+      <span class="modal-close" onclick="closeModal()">&times;</span>
+      <h2>Complaint Details</h2>
+      <div id="modalContent"></div>
+    </div>
+  </div>
+
+  <script>
+    const SUPABASE_URL = 'https://yxvohgayjvqhzccilbjs.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl4dm9oZ2F5anZxaHpjY2lsYmpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ3NDI2NjksImV4cCI6MjA4MDMxODY2OX0.PzuYav1bGc3OqtJTAujE3tBsAzznv3HTCoeCRbcucMI';
+    const DASHBOARD_PASSWORD = 'complaints2025';
+
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    let allComplaints = [];
+    let isAuthenticated = false;
+
+    window.onload = function() {
+      const savedAuth = sessionStorage.getItem('dashboard_auth');
+      if (savedAuth === 'true') {
+        showDashboard();
+      }
+      
+      const passwordInput = document.getElementById('passwordInput');
+      if (passwordInput) {
+        passwordInput.addEventListener('keyup', function(e) {
+          if (e.key === 'Enter') checkPassword();
+        });
+      }
+
+      const searchInput = document.getElementById('search');
+      if (searchInput) {
+        searchInput.addEventListener('keyup', (e) => {
+          if (e.key === 'Enter') applyFilters();
+        });
+      }
+    };
+
+    function checkPassword() {
+      const password = document.getElementById('passwordInput').value;
+      const errorMsg = document.getElementById('errorMsg');
+
+      if (password === DASHBOARD_PASSWORD) {
+        sessionStorage.setItem('dashboard_auth', 'true');
+        isAuthenticated = true;
+        errorMsg.textContent = '';
+        showDashboard();
+      } else {
+        errorMsg.textContent = 'âŒ Incorrect password. Please try again.';
+        document.getElementById('passwordInput').value = '';
+      }
+    }
+
+    function logout() {
+      sessionStorage.removeItem('dashboard_auth');
+      isAuthenticated = false;
+      document.getElementById('loginContainer').style.display = 'block';
+      document.getElementById('dashboardContainer').style.display = 'none';
+      document.getElementById('passwordInput').value = '';
+    }
+
+    function showDashboard() {
+      document.getElementById('loginContainer').style.display = 'none';
+      document.getElementById('dashboardContainer').style.display = 'block';
+      loadComplaints();
+    }
+
+    async function loadComplaints() {
+      try {
+        document.getElementById('loading').style.display = 'block';
+        document.getElementById('tableContainer').style.display = 'none';
+        document.getElementById('noData').style.display = 'none';
+
+        const { data, error } = await supabase
+          .from('complaints')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        allComplaints = data;
+        updateStats(data);
+        displayComplaints(data);
+
+      } catch (error) {
+        console.error('Error:', error);
+        alert('Failed to load complaints: ' + error.message);
+      } finally {
+        document.getElementById('loading').style.display = 'none';
+      }
+    }
+
+    function updateStats(data) {
+      document.getElementById('total').textContent = data.length;
+      document.getElementById('red').textContent = data.filter(c => c.severity === 'RED').length;
+      document.getElementById('orange').textContent = data.filter(c => c.severity === 'ORANGE').length;
+      document.getElementById('yellow').textContent = data.filter(c => c.severity === 'YELLOW').length;
+    }
+
+    function displayComplaints(data) {
+      const tbody = document.getElementById('tbody');
+      tbody.innerHTML = '';
+
+      if (data.length === 0) {
+        document.getElementById('noData').style.display = 'block';
+        return;
+      }
+
+      document.getElementById('tableContainer').style.display = 'block';
+
+      data.forEach(complaint => {
+        const row = document.createElement('tr');
+        
+        const date = new Date(complaint.created_at).toLocaleString('en-IN', {
+          day: '2-digit',
+          month: 'short',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+
+        const emotionPercent = complaint.emotion || 0;
+
+        row.innerHTML = `
+          <td>${date}</td>
+          <td><strong>${complaint.name || 'Unknown'}</strong></td>
+          <td>${complaint.ward || '-'}</td>
+          <td>${complaint.category || '-'}</td>
+          <td title="${complaint.complaint}" style="max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+            ${complaint.complaint || 'No complaint text'}
+          </td>
+          <td>
+            <span class="severity-badge severity-${complaint.severity}">
+              ${complaint.severity || 'UNKNOWN'}
+            </span>
+          </td>
+          <td>
+            <div class="emotion-bar">
+              <div class="emotion-fill" style="width: ${emotionPercent}%"></div>
+            </div>
+            <span style="font-size: 11px; color: #666; margin-left: 5px;">${emotionPercent}</span>
+          </td>
+          <td>
+            <select class="status-select status-${complaint.status}" 
+                    onchange="updateStatus('${complaint.id}', this.value)">
+              <option value="pending" ${complaint.status === 'pending' ? 'selected' : ''}>Pending</option>
+              <option value="in_progress" ${complaint.status === 'in_progress' ? 'selected' : ''}>In Progress</option>
+              <option value="resolved" ${complaint.status === 'resolved' ? 'selected' : ''}>Resolved</option>
+              <option value="rejected" ${complaint.status === 'rejected' ? 'selected' : ''}>Rejected</option>
+            </select>
+          </td>
+          <td>
+            ${complaint.recording_url 
+              ? `<audio controls class="audio-player"><source src="${complaint.recording_url}" type="audio/mpeg"></audio>` 
+              : '<span style="color: #999;">No recording</span>'}
+          </td>
+          <td>
+            <button class="view-btn" onclick="viewDetails('${complaint.id}')">ðŸ‘ï¸ View</button>
+          </td>
+        `;
+
+        tbody.appendChild(row);
+      });
+    }
+
+    function applyFilters() {
+      const search = document.getElementById('search').value.toLowerCase();
+      const severity = document.getElementById('severityFilter').value;
+      const category = document.getElementById('categoryFilter').value;
+      const status = document.getElementById('statusFilter').value;
+      const ward = document.getElementById('wardFilter').value.toLowerCase();
+
+      let filtered = allComplaints.filter(c => {
+        const matchSearch = !search || 
+          (c.name?.toLowerCase().includes(search)) ||
+          (c.ward?.toLowerCase().includes(search)) ||
+          (c.complaint?.toLowerCase().includes(search));
+
+        const matchSeverity = !severity || c.severity === severity;
+        const matchCategory = !category || c.category === category;
+        const matchStatus = !status || c.status === status;
+        const matchWard = !ward || c.ward?.toLowerCase().includes(ward);
+
+        return matchSearch && matchSeverity && matchCategory && matchStatus && matchWard;
+      });
+
+      displayComplaints(filtered);
+    }
+
+    async function updateStatus(id, newStatus) {
+      try {
+        const { error } = await supabase
+          .from('complaints')
+          .update({ 
+            status: newStatus,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', id);
+
+        if (error) throw error;
+
+        const complaint = allComplaints.find(c => c.id === id);
+        if (complaint) complaint.status = newStatus;
+
+        alert('âœ… Status updated successfully!');
+
+      } catch (error) {
+        console.error('Error:', error);
+        alert('âŒ Failed to update status: ' + error.message);
+      }
+    }
+
+    function viewDetails(id) {
+      const complaint = allComplaints.find(c => c.id === id);
+      if (!complaint) return;
+
+      const modalContent = document.getElementById('modalContent');
+      modalContent.innerHTML = `
+        <div class="detail-row">
+          <div class="detail-label">ðŸ‘¤ Name</div>
+          <div class="detail-value">${complaint.name || 'Unknown'}</div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-label">ðŸ“ Ward</div>
+          <div class="detail-value">${complaint.ward || 'N/A'}</div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-label">ðŸ“ž Phone</div>
+          <div class="detail-value">${complaint.user_number || 'N/A'}</div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-label">ðŸ“ Complaint</div>
+          <div class="detail-value">${complaint.complaint || 'No complaint text'}</div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-label">ðŸ“Š Category</div>
+          <div class="detail-value">${complaint.category || 'N/A'}</div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-label">â±ï¸ Duration</div>
+          <div class="detail-value">${complaint.duration || 'N/A'}</div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-label">ðŸŽ¯ Impact</div>
+          <div class="detail-value">${complaint.impact || 'N/A'}</div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-label">ðŸš¨ Severity</div>
+          <div class="detail-value"><span class="severity-badge severity-${complaint.severity}">${complaint.severity || 'N/A'}</span></div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-label">ðŸ˜  Emotion Score</div>
+          <div class="detail-value">${complaint.emotion || 0}/100</div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-label">ðŸ“Œ Status</div>
+          <div class="detail-value">${complaint.status || 'N/A'}</div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-label">â±ï¸ Call Duration</div>
+          <div class="detail-value">${complaint.conversation_duration || 0} seconds</div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-label">ðŸ’° Cost</div>
+          <div class="detail-value">â‚¹${complaint.total_cost || 0}</div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-label">ðŸ“… Call Time</div>
+          <div class="detail-value">${complaint.call_created_at ? new Date(complaint.call_created_at).toLocaleString('en-IN') : 'N/A'}</div>
+        </div>
+        ${complaint.transcript ? `
+        <div class="detail-row">
+          <div class="detail-label">ðŸ“œ Transcript</div>
+          <div class="detail-value" style="white-space: pre-wrap; max-height: 200px; overflow-y: auto;">${complaint.transcript}</div>
+        </div>
+        ` : ''}
+        ${complaint.summary ? `
+        <div class="detail-row">
+          <div class="detail-label">ðŸ“‹ Summary</div>
+          <div class="detail-value">${complaint.summary}</div>
+        </div>
+        ` : ''}
+        ${complaint.recording_url ? `
+        <div class="detail-row">
+          <div class="detail-label">ðŸŽ¤ Recording</div>
+          <div class="detail-value">
+            <audio controls style="width: 100%;"><source src="${complaint.recording_url}" type="audio/mpeg"></audio>
+          </div>
+        </div>
+        ` : ''}
+      `;
+
+      document.getElementById('detailsModal').style.display = 'block';
+    }
+
+    function closeModal(event) {
+      if (!event || event.target.id === 'detailsModal') {
+        document.getElementById('detailsModal').style.display = 'none';
+      }
+    }
+
+    function exportToCSV() {
+      const headers = ['Date', 'Name', 'Ward', 'Phone', 'Category', 'Complaint', 'Severity', 'Emotion', 'Status', 'Duration', 'Impact'];
+      
+      const rows = allComplaints.map(c => [
+        new Date(c.created_at).toLocaleString('en-IN'),
+        c.name || '',
+        c.ward || '',
+        c.user_number || '',
+        c.category || '',
+        (c.complaint || '').replace(/"/g, '""'),
+        c.severity || '',
+        c.emotion || 0,
+        c.status || '',
+        c.duration || '',
+        c.impact || ''
+      ]);
+
+      const csv = [
+        headers.join(','),
+        ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+      ].join('\n');
+
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `complaints-${new Date().toISOString().split('T')[0]}.csv`;
+      a.click();
+    }
+
+    setInterval(() => {
+      if (isAuthenticated) {
+        loadComplaints();
+      }
+    }, 30000);
+  </script>
+</body>
+</html>
