@@ -505,26 +505,41 @@
       <button onclick="logout()" class="logout-btn">Logout</button>
     </div>
 
-    <!-- Stats Cards -->
-    <div class="stats">
-      <div class="stat-card">
-        <h3>Total Complaints</h3>
-        <div class="number" id="total">0</div>
-      </div>
-      <div class="stat-card red">
-        <h3>Urgent (RED)</h3>
-        <div class="number" id="red">0</div>
-      </div>
-      <div class="stat-card orange">
-        <h3>High Priority (ORANGE)</h3>
-        <div class="number" id="orange">0</div>
-      </div>
-      <div class="stat-card yellow">
-        <h3>Medium (YELLOW)</h3>
-        <div class="number" id="yellow">0</div>
+<div class="stats">
+  <div class="stat-card">
+    <h3>Total Complaints</h3>
+    <div class="number" id="total">0</div>
+  </div>
+  <div class="stat-card red">
+    <h3>Urgent (RED)</h3>
+    <div class="number" id="red">0</div>
+  </div>
+  <div class="stat-card orange">
+    <h3>High Priority (ORANGE)</h3>
+    <div class="number" id="orange">0</div>
+  </div>
+  <div class="stat-card yellow">
+    <h3>Medium (YELLOW)</h3>
+    <div class="number" id="yellow">0</div>
+  </div>
+</div>
+
+<!-- Simple Billing Card -->
+<div style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; padding: 20px; border-radius: 12px; margin: 20px 0; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+  <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+    <div>
+      <h3 style="margin-bottom: 10px; font-size: 16px; opacity: 0.9;">Current Unbilled Amount</h3>
+      <div style="font-size: 32px; font-weight: bold;" id="totalBill">Rs.0</div>
+      <div style="font-size: 13px; opacity: 0.9; margin-top: 5px;">
+        <span id="unbilledCount">0</span> unbilled calls
       </div>
     </div>
-
+    <div style="text-align: right;">
+      <div style="font-size: 12px; opacity: 0.9; margin-bottom: 5px;">Actual Cost</div>
+      <div style="font-size: 20px; font-weight: bold;" id="actualCostDisplay">Rs.0</div>
+    </div>
+  </div>
+</div>
     <!-- Filters -->
     <div class="filters">
       <div class="filter-group">
@@ -622,356 +637,383 @@
     </div>
   </div>
 
-  <script>
-    const SUPABASE_URL = 'https://yxvohgayjvqhzccilbjs.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl4dm9oZ2F5anZxaHpjY2lsYmpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ3NDI2NjksImV4cCI6MjA4MDMxODY2OX0.PzuYav1bGc3OqtJTAujE3tBsAzznv3HTCoeCRbcucMI';
-    const DASHBOARD_PASSWORD = 'DMK2026';
+<script>
+  const SUPABASE_URL = 'https://yxvohgayjvqhzccilbjs.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl4dm9oZ2F5anZxaHpjY2lsYmpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ3NDI2NjksImV4cCI6MjA4MDMxODY2OX0.PzuYav1bGc3OqtJTAujE3tBsAzznv3HTCoeCRbcucMI';
+  const DASHBOARD_PASSWORD = 'DMK2026';
 
-    const { createClient } = window.supabase;
-    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  const { createClient } = window.supabase;
+  const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    let allComplaints = [];
-    let isAuthenticated = false;
+  let allComplaints = [];
+  let isAuthenticated = false;
 
-    window.onload = function() {
-      const savedAuth = sessionStorage.getItem('dashboard_auth');
-      if (savedAuth === 'true') {
-        showDashboard();
-      }
-      
-      const passwordInput = document.getElementById('passwordInput');
-      if (passwordInput) {
-        passwordInput.addEventListener('keyup', function(e) {
-          if (e.key === 'Enter') checkPassword();
-        });
-      }
-
-      const searchInput = document.getElementById('search');
-      if (searchInput) {
-        searchInput.addEventListener('keyup', (e) => {
-          if (e.key === 'Enter') applyFilters();
-        });
-      }
-    };
-
-    function togglePassword() {
-      const input = document.getElementById('passwordInput');
-      const toggle = document.querySelector('.toggle-password');
-      
-      if (input.type === 'password') {
-        input.type = 'text';
-        toggle.textContent = '🙈';
-      } else {
-        input.type = 'password';
-        toggle.textContent = '👁️';
-      }
+  window.onload = function() {
+    const savedAuth = sessionStorage.getItem('dashboard_auth');
+    if (savedAuth === 'true') {
+      showDashboard();
+    }
+    
+    const passwordInput = document.getElementById('passwordInput');
+    if (passwordInput) {
+      passwordInput.addEventListener('keyup', function(e) {
+        if (e.key === 'Enter') checkPassword();
+      });
     }
 
-    function checkPassword() {
-      const password = document.getElementById('passwordInput').value;
-      const errorMsg = document.getElementById('errorMsg');
-
-      if (password === DASHBOARD_PASSWORD) {
-        sessionStorage.setItem('dashboard_auth', 'true');
-        isAuthenticated = true;
-        errorMsg.textContent = '';
-        showDashboard();
-      } else {
-        errorMsg.textContent = 'Incorrect password. Please try again.';
-        document.getElementById('passwordInput').value = '';
-      }
+    const searchInput = document.getElementById('search');
+    if (searchInput) {
+      searchInput.addEventListener('keyup', (e) => {
+        if (e.key === 'Enter') applyFilters();
+      });
     }
+  };
 
-    function logout() {
-      sessionStorage.removeItem('dashboard_auth');
-      isAuthenticated = false;
-      document.getElementById('loginContainer').style.display = 'block';
-      document.getElementById('dashboardContainer').style.display = 'none';
+  function togglePassword() {
+    const input = document.getElementById('passwordInput');
+    const toggle = document.querySelector('.toggle-password');
+    
+    if (input.type === 'password') {
+      input.type = 'text';
+      toggle.textContent = '🙈';
+    } else {
+      input.type = 'password';
+      toggle.textContent = '👁️';
+    }
+  }
+
+  function checkPassword() {
+    const password = document.getElementById('passwordInput').value;
+    const errorMsg = document.getElementById('errorMsg');
+
+    if (password === DASHBOARD_PASSWORD) {
+      sessionStorage.setItem('dashboard_auth', 'true');
+      isAuthenticated = true;
+      errorMsg.textContent = '';
+      showDashboard();
+    } else {
+      errorMsg.textContent = 'Incorrect password. Please try again.';
       document.getElementById('passwordInput').value = '';
     }
+  }
 
-    function showDashboard() {
-      document.getElementById('loginContainer').style.display = 'none';
-      document.getElementById('dashboardContainer').style.display = 'block';
+  function logout() {
+    sessionStorage.removeItem('dashboard_auth');
+    isAuthenticated = false;
+    document.getElementById('loginContainer').style.display = 'block';
+    document.getElementById('dashboardContainer').style.display = 'none';
+    document.getElementById('passwordInput').value = '';
+  }
+
+  function showDashboard() {
+    document.getElementById('loginContainer').style.display = 'none';
+    document.getElementById('dashboardContainer').style.display = 'block';
+    
+    document.getElementById('search').value = '';
+    document.getElementById('severityFilter').value = '';
+    document.getElementById('categoryFilter').value = '';
+    document.getElementById('statusFilter').value = '';
+    document.getElementById('wardFilter').value = '';
+    
+    loadComplaints();
+    loadBillingTotal();  // ✅ ADDED
+  }
+
+  async function loadComplaints() {
+    try {
+      document.getElementById('loading').style.display = 'block';
+      document.getElementById('tableContainer').style.display = 'none';
+      document.getElementById('noData').style.display = 'none';
+
+      const { data, error } = await supabase
+        .from('complaints')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      allComplaints = data;
+      updateStats(data);
+      displayComplaints(data);
+
+    } catch (error) {
+      console.error('Error:', error);
+      alert('Failed to load complaints: ' + error.message);
+    } finally {
+      document.getElementById('loading').style.display = 'none';
+    }
+  }
+
+  // ✅ NEW FUNCTION
+  async function loadBillingTotal() {
+    try {
+      const { data, error, count } = await supabase
+        .from('complaints')
+        .select('total_cost, billed_amount', { count: 'exact' })
+        .eq('is_billed', false);
+
+      if (error) throw error;
+
+      const totalCost = data.reduce((sum, c) => sum + (c.total_cost || 0), 0);
+      const billAmount = data.reduce((sum, c) => sum + (c.billed_amount || 0), 0);
+
+      document.getElementById('unbilledCount').textContent = count || 0;
+      document.getElementById('actualCostDisplay').textContent = 'Rs.' + totalCost.toFixed(2);
+      document.getElementById('totalBill').textContent = 'Rs.' + billAmount.toFixed(2);
+
+    } catch (error) {
+      console.error('Error loading billing:', error);
+    }
+  }
+
+  function updateStats(data) {
+    document.getElementById('total').textContent = data.length;
+    document.getElementById('red').textContent = data.filter(c => c.severity === 'RED').length;
+    document.getElementById('orange').textContent = data.filter(c => c.severity === 'ORANGE').length;
+    document.getElementById('yellow').textContent = data.filter(c => c.severity === 'YELLOW').length;
+  }
+
+  function displayComplaints(data) {
+    const tbody = document.getElementById('tbody');
+    tbody.innerHTML = '';
+
+    if (data.length === 0) {
+      document.getElementById('noData').style.display = 'block';
+      return;
+    }
+
+    document.getElementById('tableContainer').style.display = 'block';
+
+    data.forEach(complaint => {
+      const row = document.createElement('tr');
       
-      // Clear filters
-      document.getElementById('search').value = '';
-      document.getElementById('severityFilter').value = '';
-      document.getElementById('categoryFilter').value = '';
-      document.getElementById('statusFilter').value = '';
-      document.getElementById('wardFilter').value = '';
-      
-      loadComplaints();
-    }
-
-    async function loadComplaints() {
-      try {
-        document.getElementById('loading').style.display = 'block';
-        document.getElementById('tableContainer').style.display = 'none';
-        document.getElementById('noData').style.display = 'none';
-
-        const { data, error } = await supabase
-          .from('complaints')
-          .select('*')
-          .order('created_at', { ascending: false });
-
-        if (error) throw error;
-
-        allComplaints = data;
-        updateStats(data);
-        displayComplaints(data);
-
-      } catch (error) {
-        console.error('Error:', error);
-        alert('Failed to load complaints: ' + error.message);
-      } finally {
-        document.getElementById('loading').style.display = 'none';
-      }
-    }
-
-    function updateStats(data) {
-      document.getElementById('total').textContent = data.length;
-      document.getElementById('red').textContent = data.filter(c => c.severity === 'RED').length;
-      document.getElementById('orange').textContent = data.filter(c => c.severity === 'ORANGE').length;
-      document.getElementById('yellow').textContent = data.filter(c => c.severity === 'YELLOW').length;
-    }
-
-    function displayComplaints(data) {
-      const tbody = document.getElementById('tbody');
-      tbody.innerHTML = '';
-
-      if (data.length === 0) {
-        document.getElementById('noData').style.display = 'block';
-        return;
-      }
-
-      document.getElementById('tableContainer').style.display = 'block';
-
-      data.forEach(complaint => {
-        const row = document.createElement('tr');
-        
-        const date = new Date(complaint.created_at).toLocaleString('en-IN', {
-          day: '2-digit',
-          month: 'short',
-          hour: '2-digit',
-          minute: '2-digit'
-        });
-
-        const emotionPercent = complaint.emotion || 0;
-
-        row.innerHTML = `
-          <td>${date}</td>
-          <td><strong>${complaint.name || 'Unknown'}</strong></td>
-          <td>${complaint.ward || '-'}</td>
-          <td>${complaint.category || '-'}</td>
-          <td title="${complaint.complaint}" style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-            ${complaint.complaint || 'No complaint text'}
-          </td>
-          <td>
-            <span class="severity-badge severity-${complaint.severity}">
-              ${complaint.severity || 'UNKNOWN'}
-            </span>
-          </td>
-          <td>
-            <div class="emotion-bar">
-              <div class="emotion-fill" style="width: ${emotionPercent}%"></div>
-            </div>
-            <span style="font-size: 10px; color: #666; margin-left: 3px;">${emotionPercent}</span>
-          </td>
-          <td>
-            <select class="status-select status-${complaint.status}" 
-                    onchange="updateStatus('${complaint.id}', this.value)">
-              <option value="pending" ${complaint.status === 'pending' ? 'selected' : ''}>Pending</option>
-              <option value="in_progress" ${complaint.status === 'in_progress' ? 'selected' : ''}>In Progress</option>
-              <option value="resolved" ${complaint.status === 'resolved' ? 'selected' : ''}>Resolved</option>
-              <option value="rejected" ${complaint.status === 'rejected' ? 'selected' : ''}>Rejected</option>
-            </select>
-          </td>
-          <td>
-            ${complaint.recording_url 
-              ? `<audio controls class="audio-player"><source src="${complaint.recording_url}" type="audio/mpeg"></audio>` 
-              : '<span style="color: #999;">No recording</span>'}
-          </td>
-          <td>
-            <button class="view-btn" onclick="viewDetails('${complaint.id}')">View</button>
-          </td>
-        `;
-
-        tbody.appendChild(row);
-      });
-    }
-
-    function applyFilters() {
-      const search = document.getElementById('search').value.toLowerCase();
-      const severity = document.getElementById('severityFilter').value;
-      const category = document.getElementById('categoryFilter').value;
-      const status = document.getElementById('statusFilter').value;
-      const ward = document.getElementById('wardFilter').value.toLowerCase();
-
-      let filtered = allComplaints.filter(c => {
-        const matchSearch = !search || 
-          (c.name?.toLowerCase().includes(search)) ||
-          (c.ward?.toLowerCase().includes(search)) ||
-          (c.complaint?.toLowerCase().includes(search));
-
-        const matchSeverity = !severity || c.severity === severity;
-        const matchCategory = !category || c.category === category;
-        const matchStatus = !status || c.status === status;
-        const matchWard = !ward || c.ward?.toLowerCase().includes(ward);
-
-        return matchSearch && matchSeverity && matchCategory && matchStatus && matchWard;
+      const date = new Date(complaint.created_at).toLocaleString('en-IN', {
+        day: '2-digit',
+        month: 'short',
+        hour: '2-digit',
+        minute: '2-digit'
       });
 
-      displayComplaints(filtered);
-    }
+      const emotionPercent = complaint.emotion || 0;
 
-    async function updateStatus(id, newStatus) {
-      try {
-        const { error } = await supabase
-          .from('complaints')
-          .update({ 
-            status: newStatus,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', id);
-
-        if (error) throw error;
-
-        const complaint = allComplaints.find(c => c.id === id);
-        if (complaint) complaint.status = newStatus;
-
-        alert('Status updated successfully!');
-
-      } catch (error) {
-        console.error('Error:', error);
-        alert('Failed to update status: ' + error.message);
-      }
-    }
-
-    function viewDetails(id) {
-      const complaint = allComplaints.find(c => c.id === id);
-      if (!complaint) return;
-
-      const modalContent = document.getElementById('modalContent');
-      modalContent.innerHTML = `
-        <div class="detail-row">
-          <div class="detail-label">Name</div>
-          <div class="detail-value">${complaint.name || 'Unknown'}</div>
-        </div>
-        <div class="detail-row">
-          <div class="detail-label">Ward</div>
-          <div class="detail-value">${complaint.ward || 'N/A'}</div>
-        </div>
-        <div class="detail-row">
-          <div class="detail-label">Phone</div>
-          <div class="detail-value">${complaint.user_number || 'N/A'}</div>
-        </div>
-        <div class="detail-row">
-          <div class="detail-label">Complaint</div>
-          <div class="detail-value">${complaint.complaint || 'No complaint text'}</div>
-        </div>
-        <div class="detail-row">
-          <div class="detail-label">Category</div>
-          <div class="detail-value">${complaint.category || 'N/A'}</div>
-        </div>
-        <div class="detail-row">
-          <div class="detail-label">Duration</div>
-          <div class="detail-value">${complaint.duration || 'N/A'}</div>
-        </div>
-        <div class="detail-row">
-          <div class="detail-label">Impact</div>
-          <div class="detail-value">${complaint.impact || 'N/A'}</div>
-        </div>
-        <div class="detail-row">
-          <div class="detail-label">Severity</div>
-          <div class="detail-value"><span class="severity-badge severity-${complaint.severity}">${complaint.severity || 'N/A'}</span></div>
-        </div>
-        <div class="detail-row">
-          <div class="detail-label">Emotion Score</div>
-          <div class="detail-value">${complaint.emotion || 0}/100</div>
-        </div>
-        <div class="detail-row">
-          <div class="detail-label">Status</div>
-          <div class="detail-value">${complaint.status || 'N/A'}</div>
-        </div>
-        <div class="detail-row">
-          <div class="detail-label">Call Duration</div>
-          <div class="detail-value">${complaint.conversation_duration || 0} seconds</div>
-        </div>
-        <div class="detail-row">
-          <div class="detail-label">Cost</div>
-          <div class="detail-value">Rs.${complaint.total_cost || 0}</div>
-        </div>
-        <div class="detail-row">
-          <div class="detail-label">Call Time</div>
-          <div class="detail-value">${complaint.call_created_at ? new Date(complaint.call_created_at).toLocaleString('en-IN') : 'N/A'}</div>
-        </div>
-        ${complaint.transcript ? `
-        <div class="detail-row">
-          <div class="detail-label">Transcript</div>
-          <div class="detail-value" style="white-space: pre-wrap; max-height: 200px; overflow-y: auto;">${complaint.transcript}</div>
-        </div>
-        ` : ''}
-        ${complaint.summary ? `
-        <div class="detail-row">
-          <div class="detail-label">Summary</div>
-          <div class="detail-value">${complaint.summary}</div>
-        </div>
-        ` : ''}
-        ${complaint.recording_url ? `
-        <div class="detail-row">
-          <div class="detail-label">Recording</div>
-          <div class="detail-value">
-            <audio controls style="width: 100%;"><source src="${complaint.recording_url}" type="audio/mpeg"></audio>
+      row.innerHTML = `
+        <td>${date}</td>
+        <td><strong>${complaint.name || 'Unknown'}</strong></td>
+        <td>${complaint.ward || '-'}</td>
+        <td>${complaint.category || '-'}</td>
+        <td title="${complaint.complaint}" style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+          ${complaint.complaint || 'No complaint text'}
+        </td>
+        <td>
+          <span class="severity-badge severity-${complaint.severity}">
+            ${complaint.severity || 'UNKNOWN'}
+          </span>
+        </td>
+        <td>
+          <div class="emotion-bar">
+            <div class="emotion-fill" style="width: ${emotionPercent}%"></div>
           </div>
-        </div>
-        ` : ''}
+          <span style="font-size: 10px; color: #666; margin-left: 3px;">${emotionPercent}</span>
+        </td>
+        <td>
+          <select class="status-select status-${complaint.status}" 
+                  onchange="updateStatus('${complaint.id}', this.value)">
+            <option value="pending" ${complaint.status === 'pending' ? 'selected' : ''}>Pending</option>
+            <option value="in_progress" ${complaint.status === 'in_progress' ? 'selected' : ''}>In Progress</option>
+            <option value="resolved" ${complaint.status === 'resolved' ? 'selected' : ''}>Resolved</option>
+            <option value="rejected" ${complaint.status === 'rejected' ? 'selected' : ''}>Rejected</option>
+          </select>
+        </td>
+        <td>
+          ${complaint.recording_url 
+            ? `<audio controls class="audio-player"><source src="${complaint.recording_url}" type="audio/mpeg"></audio>` 
+            : '<span style="color: #999;">No recording</span>'}
+        </td>
+        <td>
+          <button class="view-btn" onclick="viewDetails('${complaint.id}')">View</button>
+        </td>
       `;
 
-      document.getElementById('detailsModal').style.display = 'block';
+      tbody.appendChild(row);
+    });
+  }
+
+  function applyFilters() {
+    const search = document.getElementById('search').value.toLowerCase();
+    const severity = document.getElementById('severityFilter').value;
+    const category = document.getElementById('categoryFilter').value;
+    const status = document.getElementById('statusFilter').value;
+    const ward = document.getElementById('wardFilter').value.toLowerCase();
+
+    let filtered = allComplaints.filter(c => {
+      const matchSearch = !search || 
+        (c.name?.toLowerCase().includes(search)) ||
+        (c.ward?.toLowerCase().includes(search)) ||
+        (c.complaint?.toLowerCase().includes(search));
+
+      const matchSeverity = !severity || c.severity === severity;
+      const matchCategory = !category || c.category === category;
+      const matchStatus = !status || c.status === status;
+      const matchWard = !ward || c.ward?.toLowerCase().includes(ward);
+
+      return matchSearch && matchSeverity && matchCategory && matchStatus && matchWard;
+    });
+
+    displayComplaints(filtered);
+  }
+
+  async function updateStatus(id, newStatus) {
+    try {
+      const { error } = await supabase
+        .from('complaints')
+        .update({ 
+          status: newStatus,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id);
+
+      if (error) throw error;
+
+      const complaint = allComplaints.find(c => c.id === id);
+      if (complaint) complaint.status = newStatus;
+
+      alert('Status updated successfully!');
+
+    } catch (error) {
+      console.error('Error:', error);
+      alert('Failed to update status: ' + error.message);
     }
+  }
 
-    function closeModal(event) {
-      if (!event || event.target.id === 'detailsModal') {
-        document.getElementById('detailsModal').style.display = 'none';
-      }
+  function viewDetails(id) {
+    const complaint = allComplaints.find(c => c.id === id);
+    if (!complaint) return;
+
+    const modalContent = document.getElementById('modalContent');
+    modalContent.innerHTML = `
+      <div class="detail-row">
+        <div class="detail-label">Name</div>
+        <div class="detail-value">${complaint.name || 'Unknown'}</div>
+      </div>
+      <div class="detail-row">
+        <div class="detail-label">Ward</div>
+        <div class="detail-value">${complaint.ward || 'N/A'}</div>
+      </div>
+      <div class="detail-row">
+        <div class="detail-label">Phone</div>
+        <div class="detail-value">${complaint.user_number || 'N/A'}</div>
+      </div>
+      <div class="detail-row">
+        <div class="detail-label">Complaint</div>
+        <div class="detail-value">${complaint.complaint || 'No complaint text'}</div>
+      </div>
+      <div class="detail-row">
+        <div class="detail-label">Category</div>
+        <div class="detail-value">${complaint.category || 'N/A'}</div>
+      </div>
+      <div class="detail-row">
+        <div class="detail-label">Duration</div>
+        <div class="detail-value">${complaint.duration || 'N/A'}</div>
+      </div>
+      <div class="detail-row">
+        <div class="detail-label">Impact</div>
+        <div class="detail-value">${complaint.impact || 'N/A'}</div>
+      </div>
+      <div class="detail-row">
+        <div class="detail-label">Severity</div>
+        <div class="detail-value"><span class="severity-badge severity-${complaint.severity}">${complaint.severity || 'N/A'}</span></div>
+      </div>
+      <div class="detail-row">
+        <div class="detail-label">Emotion Score</div>
+        <div class="detail-value">${complaint.emotion || 0}/100</div>
+      </div>
+      <div class="detail-row">
+        <div class="detail-label">Status</div>
+        <div class="detail-value">${complaint.status || 'N/A'}</div>
+      </div>
+      <div class="detail-row">
+        <div class="detail-label">Call Duration</div>
+        <div class="detail-value">${complaint.conversation_duration || 0} seconds</div>
+      </div>
+      <div class="detail-row">
+        <div class="detail-label">Actual Cost</div>
+        <div class="detail-value">Rs.${(complaint.total_cost || 0).toFixed(2)}</div>
+      </div>
+      <div class="detail-row">
+        <div class="detail-label">Billed Amount</div>
+        <div class="detail-value">Rs.${(complaint.billed_amount || 0).toFixed(2)}</div>
+      </div>
+      <div class="detail-row">
+        <div class="detail-label">Call Time</div>
+        <div class="detail-value">${complaint.call_created_at ? new Date(complaint.call_created_at).toLocaleString('en-IN') : 'N/A'}</div>
+      </div>
+      ${complaint.transcript ? `
+      <div class="detail-row">
+        <div class="detail-label">Transcript</div>
+        <div class="detail-value" style="white-space: pre-wrap; max-height: 200px; overflow-y: auto;">${complaint.transcript}</div>
+      </div>
+      ` : ''}
+      ${complaint.summary ? `
+      <div class="detail-row">
+        <div class="detail-label">Summary</div>
+        <div class="detail-value">${complaint.summary}</div>
+      </div>
+      ` : ''}
+      ${complaint.recording_url ? `
+      <div class="detail-row">
+        <div class="detail-label">Recording</div>
+        <div class="detail-value">
+          <audio controls style="width: 100%;"><source src="${complaint.recording_url}" type="audio/mpeg"></audio>
+        </div>
+      </div>
+      ` : ''}
+    `;
+
+    document.getElementById('detailsModal').style.display = 'block';
+  }
+
+  function closeModal(event) {
+    if (!event || event.target.id === 'detailsModal') {
+      document.getElementById('detailsModal').style.display = 'none';
     }
+  }
 
-    function exportToCSV() {
-      const headers = ['Date', 'Name', 'Ward', 'Phone', 'Category', 'Complaint', 'Severity', 'Emotion', 'Status', 'Duration', 'Impact'];
-      
-      const rows = allComplaints.map(c => [
-        new Date(c.created_at).toLocaleString('en-IN'),
-        c.name || '',
-        c.ward || '',
-        c.user_number || '',
-        c.category || '',
-        (c.complaint || '').replace(/"/g, '""'),
-        c.severity || '',
-        c.emotion || 0,
-        c.status || '',
-        c.duration || '',
-        c.impact || ''
-      ]);
+  function exportToCSV() {
+    const headers = ['Date', 'Name', 'Ward', 'Phone', 'Category', 'Complaint', 'Severity', 'Emotion', 'Status', 'Duration', 'Impact'];
+    
+    const rows = allComplaints.map(c => [
+      new Date(c.created_at).toLocaleString('en-IN'),
+      c.name || '',
+      c.ward || '',
+      c.user_number || '',
+      c.category || '',
+      (c.complaint || '').replace(/"/g, '""'),
+      c.severity || '',
+      c.emotion || 0,
+      c.status || '',
+      c.duration || '',
+      c.impact || ''
+    ]);
 
-      const csv = [
-        headers.join(','),
-        ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
-      ].join('\n');
+    const csv = [
+      headers.join(','),
+      ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+    ].join('\n');
 
-      const blob = new Blob([csv], { type: 'text/csv' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `complaints-${new Date().toISOString().split('T')[0]}.csv`;
-      a.click();
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `complaints-${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+  }
+
+  setInterval(() => {
+    if (isAuthenticated) {
+      loadComplaints();
+      loadBillingTotal();  // ✅ ADDED
     }
-
-    setInterval(() => {
-      if (isAuthenticated) {
-        loadComplaints();
-      }
-    }, 30000);
-  </script>
+  }, 30000);
+</script>
 </body>
 </html>
