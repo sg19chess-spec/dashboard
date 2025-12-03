@@ -653,6 +653,14 @@
           <input type="text" id="wardFilter" placeholder="Ward...">
         </div>
         <div class="filter-group">
+  <label>Call Type</label>
+  <select id="callTypeFilter">
+    <option value="">All Calls</option>
+    <option value="inbound">↓ Inbound</option>
+    <option value="outbound">↑ Outbound</option>
+  </select>
+</div>
+        <div class="filter-group">
           <label>&nbsp;</label>
           <button class="filter-btn" onclick="applyFilters()">Filter</button>
         </div>
@@ -668,6 +676,7 @@
             <thead>
               <tr>
                 <th>Date</th>
+                <th>Type</th>
                 <th>Name</th>
                 <th>Ward</th>
                 <th>Category</th>
@@ -777,6 +786,8 @@
       document.getElementById('categoryFilter').value = '';
       document.getElementById('statusFilter').value = '';
       document.getElementById('wardFilter').value = '';
+      document.getElementById('callTypeFilter').value = ''; // ✅ ADD THIS
+
       
       loadComplaints();
       loadBillingTotal();
@@ -857,8 +868,14 @@
         const emotionPercent = complaint.emotion || 0;
 
         row.innerHTML = `
-          <td>${date}</td>
-          <td><strong>${complaint.name || 'Unknown'}</strong></td>
+          row.innerHTML = `
+  <td>${date}</td>
+  <td style="text-align: center;">
+    ${complaint.call_type === 'inbound' 
+      ? '<span style="color: #1976d2; font-size: 16px; font-weight: bold;" title="Inbound">↓</span>' 
+      : '<span style="color: #ff6b00; font-size: 16px; font-weight: bold;" title="Outbound">↑</span>'}
+  </td>
+  <td><strong>${complaint.name || 'Unknown'}</strong></td>
           <td>${complaint.ward || '-'}</td>
           <td>${complaint.category || '-'}</td>
           <td title="${complaint.complaint}" style="max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
@@ -904,6 +921,8 @@
       const category = document.getElementById('categoryFilter').value;
       const status = document.getElementById('statusFilter').value;
       const ward = document.getElementById('wardFilter').value.toLowerCase();
+      const callType = document.getElementById('callTypeFilter').value; // ✅ ADD THIS
+
 
       let filtered = allComplaints.filter(c => {
         const matchSearch = !search || 
@@ -915,8 +934,10 @@
         const matchCategory = !category || c.category === category;
         const matchStatus = !status || c.status === status;
         const matchWard = !ward || c.ward?.toLowerCase().includes(ward);
+        const matchCallType = !callType || c.call_type === callType; // ✅ ADD THIS
 
-        return matchSearch && matchSeverity && matchCategory && matchStatus && matchWard;
+
+    return matchSearch && matchSeverity && matchCategory && matchStatus && matchWard && matchCallType; // ✅ ADD matchCallType
       });
 
       displayComplaints(filtered);
