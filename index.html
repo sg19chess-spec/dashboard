@@ -1084,12 +1084,42 @@
       a.click();
     }
 
-    setInterval(() => {
-      if (isAuthenticated) {
-        loadComplaints();
-        loadBillingTotal();
+    // Replace the existing setInterval with this:
+setInterval(async () => {
+  if (isAuthenticated) {
+    // Silently refresh data without UI disruption
+    try {
+      const { data, error } = await supabase
+        .from('complaints')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (!error && data) {
+        allComplaints = data;
+        updateStats(data);
+        
+        // Only refresh table if no filters are applied
+        const hasFilters = 
+          document.getElementById('search').value ||
+          document.getElementById('severityFilter').value ||
+          document.getElementById('categoryFilter').value ||
+          document.getElementById('statusFilter').value ||
+          document.getElementById('wardFilter').value ||
+          document.getElementById('callTypeFilter').value;
+        
+        if (!hasFilters) {
+          displayComplaints(data);
+        }
       }
-    }, 30000);
+      
+      // Refresh billing silently
+      loadBillingTotal();
+      
+    } catch (error) {
+      console.error('Background refresh error:', error);
+    }
+  }
+}, 30000);
   </script>
 </body>
 </html>
