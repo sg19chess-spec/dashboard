@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Complaints Dashboard</title>
+  <title>KRN Dashboard</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0/dist/umd/supabase.min.js"></script>
   <style>
     * {
@@ -13,45 +13,63 @@
     }
 
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       min-height: 100vh;
-      padding: 20px;
+      padding: 10px;
     }
 
     .login-container {
       max-width: 400px;
-      margin: 100px auto;
+      margin: 80px auto;
       background: white;
       padding: 40px;
       border-radius: 12px;
       box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-      text-align: center;
     }
 
     .login-container h1 {
       margin-bottom: 10px;
       color: #1a1a1a;
+      text-align: center;
+      font-size: 28px;
     }
 
     .login-container p {
       color: #666;
       margin-bottom: 30px;
+      text-align: center;
+    }
+
+    .password-wrapper {
+      position: relative;
+      width: 100%;
+      margin-bottom: 15px;
     }
 
     .login-input {
       width: 100%;
       padding: 12px;
+      padding-right: 45px;
       border: 2px solid #e0e0e0;
       border-radius: 8px;
       font-size: 16px;
-      margin-bottom: 15px;
       transition: border-color 0.3s;
     }
 
     .login-input:focus {
       outline: none;
       border-color: #667eea;
+    }
+
+    .toggle-password {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      cursor: pointer;
+      font-size: 20px;
+      user-select: none;
     }
 
     .login-btn {
@@ -75,6 +93,7 @@
       color: #f44336;
       margin-top: 15px;
       font-size: 14px;
+      text-align: center;
     }
 
     .dashboard-container {
@@ -84,7 +103,7 @@
       background: white;
       border-radius: 12px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-      padding: 30px;
+      padding: 20px;
     }
 
     .header {
@@ -92,11 +111,14 @@
       justify-content: space-between;
       align-items: center;
       margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 10px;
     }
 
     h1 {
       color: #1a1a1a;
       margin-bottom: 5px;
+      font-size: 24px;
     }
 
     .subtitle {
@@ -112,6 +134,7 @@
       border-radius: 6px;
       cursor: pointer;
       font-size: 14px;
+      white-space: nowrap;
     }
 
     .logout-btn:hover {
@@ -120,17 +143,18 @@
 
     .stats {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 15px;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 10px;
       margin: 20px 0;
     }
 
     .stat-card {
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       color: white;
-      padding: 20px;
+      padding: 15px;
       border-radius: 8px;
       box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      text-align: center;
     }
 
     .stat-card.red { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
@@ -138,24 +162,24 @@
     .stat-card.yellow { background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%); }
 
     .stat-card h3 {
-      font-size: 14px;
+      font-size: 12px;
       opacity: 0.9;
       margin-bottom: 8px;
       font-weight: 500;
     }
 
     .stat-card .number {
-      font-size: 36px;
+      font-size: 28px;
       font-weight: bold;
     }
 
     .filters {
-      display: flex;
-      gap: 15px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 10px;
       margin: 20px 0;
-      flex-wrap: wrap;
       background: #f8f9fa;
-      padding: 20px;
+      padding: 15px;
       border-radius: 8px;
     }
 
@@ -166,21 +190,21 @@
     }
 
     .filter-group label {
-      font-size: 12px;
+      font-size: 11px;
       color: #666;
       font-weight: 500;
     }
 
     input, select {
-      padding: 10px;
+      padding: 8px;
       border: 1px solid #ddd;
       border-radius: 6px;
       font-size: 14px;
-      min-width: 150px;
+      width: 100%;
     }
 
     button.filter-btn {
-      padding: 10px 20px;
+      padding: 8px 15px;
       background: #667eea;
       color: white;
       border: none;
@@ -188,6 +212,7 @@
       cursor: pointer;
       font-size: 14px;
       font-weight: 500;
+      width: 100%;
     }
 
     button.filter-btn:hover {
@@ -202,28 +227,35 @@
       background: #218838;
     }
 
+    .table-wrapper {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
     table {
       width: 100%;
       border-collapse: collapse;
       margin-top: 20px;
+      min-width: 800px;
     }
 
     th {
       background: #f8f9fa;
-      padding: 12px;
+      padding: 10px 8px;
       text-align: left;
       font-weight: 600;
       color: #495057;
       border-bottom: 2px solid #dee2e6;
-      font-size: 13px;
+      font-size: 12px;
       position: sticky;
       top: 0;
+      white-space: nowrap;
     }
 
     td {
-      padding: 12px;
+      padding: 10px 8px;
       border-bottom: 1px solid #e9ecef;
-      font-size: 13px;
+      font-size: 12px;
     }
 
     tr:hover {
@@ -231,11 +263,12 @@
     }
 
     .severity-badge {
-      padding: 4px 12px;
+      padding: 3px 10px;
       border-radius: 12px;
-      font-size: 11px;
+      font-size: 10px;
       font-weight: 600;
       display: inline-block;
+      white-space: nowrap;
     }
 
     .severity-RED { background: #fee; color: #c00; }
@@ -243,11 +276,13 @@
     .severity-YELLOW { background: #fffde7; color: #f9a825; }
 
     .status-select {
-      padding: 6px 10px;
+      padding: 5px 8px;
       border: 1px solid #ddd;
       border-radius: 4px;
-      font-size: 12px;
+      font-size: 11px;
       cursor: pointer;
+      width: 100%;
+      max-width: 120px;
     }
 
     .status-pending { background: #fff3e0; color: #f57c00; }
@@ -256,12 +291,12 @@
     .status-rejected { background: #ffebee; color: #d32f2f; }
 
     .audio-player {
-      width: 200px;
+      width: 180px;
       height: 30px;
     }
 
     .emotion-bar {
-      width: 60px;
+      width: 50px;
       height: 8px;
       background: #e0e0e0;
       border-radius: 4px;
@@ -288,13 +323,14 @@
     }
 
     .view-btn {
-      padding: 6px 12px;
-      font-size: 12px;
+      padding: 5px 10px;
+      font-size: 11px;
       background: #2196f3;
       color: white;
       border: none;
       border-radius: 4px;
       cursor: pointer;
+      white-space: nowrap;
     }
 
     .view-btn:hover {
@@ -316,18 +352,18 @@
     .modal-content {
       background: white;
       max-width: 700px;
-      margin: 50px auto;
-      padding: 30px;
+      margin: 20px auto;
+      padding: 20px;
       border-radius: 12px;
       position: relative;
-      max-height: 80vh;
+      max-height: 90vh;
       overflow-y: auto;
     }
 
     .modal-close {
       position: absolute;
-      top: 15px;
-      right: 20px;
+      top: 10px;
+      right: 15px;
       font-size: 28px;
       cursor: pointer;
       color: #999;
@@ -338,7 +374,7 @@
     }
 
     .detail-row {
-      margin: 15px 0;
+      margin: 12px 0;
       padding: 10px;
       background: #f8f9fa;
       border-radius: 6px;
@@ -348,19 +384,46 @@
       font-weight: 600;
       color: #495057;
       margin-bottom: 5px;
+      font-size: 13px;
     }
 
     .detail-value {
       color: #212529;
+      font-size: 14px;
+      word-wrap: break-word;
     }
 
+    /* Mobile Optimizations */
     @media (max-width: 768px) {
-      .filters {
+      .dashboard-container {
+        padding: 15px;
+        border-radius: 8px;
+      }
+
+      h1 {
+        font-size: 20px;
+      }
+
+      .header {
         flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .logout-btn {
+        align-self: flex-end;
+      }
+
+      .stats {
+        grid-template-columns: repeat(2, 1fr);
       }
 
       .stat-card .number {
-        font-size: 28px;
+        font-size: 24px;
+      }
+
+      .filters {
+        grid-template-columns: 1fr;
+        padding: 10px;
       }
 
       table {
@@ -368,74 +431,127 @@
       }
 
       th, td {
-        padding: 8px 4px;
+        padding: 6px 4px;
+      }
+
+      .audio-player {
+        width: 150px;
+      }
+
+      .modal-content {
+        margin: 10px;
+        padding: 15px;
+      }
+
+      .login-container {
+        margin: 40px auto;
+        padding: 30px 20px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .stats {
+        grid-template-columns: 1fr;
+      }
+
+      .stat-card {
+        padding: 12px;
+      }
+
+      .stat-card .number {
+        font-size: 22px;
+      }
+
+      table {
+        font-size: 10px;
+      }
+
+      th, td {
+        padding: 5px 3px;
+      }
+
+      .view-btn {
+        padding: 4px 8px;
+        font-size: 10px;
+      }
+
+      .severity-badge {
+        font-size: 9px;
+        padding: 2px 6px;
       }
     }
   </style>
 </head>
 <body>
+  <!-- Login Screen -->
   <div id="loginContainer" class="login-container">
-    <h1>ðŸ” Dashboard Login</h1>
+    <h1>KRN Dashboard</h1>
     <p>Enter password to access complaints dashboard</p>
-    <input type="password" id="passwordInput" class="login-input" placeholder="Enter password" />
+    <div class="password-wrapper">
+      <input type="password" id="passwordInput" class="login-input" placeholder="Enter password" />
+      <span class="toggle-password" onclick="togglePassword()">👁️</span>
+    </div>
     <button onclick="checkPassword()" class="login-btn">Login</button>
     <div id="errorMsg" class="error-msg"></div>
   </div>
 
+  <!-- Dashboard -->
   <div id="dashboardContainer" class="dashboard-container">
     <div class="header">
       <div>
-        <h1>ðŸ“Š Complaints Dashboard</h1>
+        <h1>KRN Dashboard</h1>
         <p class="subtitle">Real-time complaint monitoring and management</p>
       </div>
-      <button onclick="logout()" class="logout-btn">ðŸšª Logout</button>
+      <button onclick="logout()" class="logout-btn">Logout</button>
     </div>
 
+    <!-- Stats Cards -->
     <div class="stats">
       <div class="stat-card">
         <h3>Total Complaints</h3>
         <div class="number" id="total">0</div>
       </div>
       <div class="stat-card red">
-        <h3>ðŸ”´ Urgent (RED)</h3>
+        <h3>Urgent (RED)</h3>
         <div class="number" id="red">0</div>
       </div>
       <div class="stat-card orange">
-        <h3>ðŸŸ  High Priority</h3>
+        <h3>High Priority (ORANGE)</h3>
         <div class="number" id="orange">0</div>
       </div>
       <div class="stat-card yellow">
-        <h3>ðŸŸ¡ Medium Priority</h3>
+        <h3>Medium (YELLOW)</h3>
         <div class="number" id="yellow">0</div>
       </div>
     </div>
 
+    <!-- Filters -->
     <div class="filters">
       <div class="filter-group">
         <label>Search</label>
-        <input type="text" id="search" placeholder="Name, ward, complaint...">
+        <input type="text" id="search" placeholder="Name, ward...">
       </div>
 
       <div class="filter-group">
         <label>Severity</label>
         <select id="severityFilter">
-          <option value="">All Severities</option>
-          <option value="RED">ðŸ”´ RED</option>
-          <option value="ORANGE">ðŸŸ  ORANGE</option>
-          <option value="YELLOW">ðŸŸ¡ YELLOW</option>
+          <option value="">All</option>
+          <option value="RED">RED</option>
+          <option value="ORANGE">ORANGE</option>
+          <option value="YELLOW">YELLOW</option>
         </select>
       </div>
 
       <div class="filter-group">
         <label>Category</label>
         <select id="categoryFilter">
-          <option value="">All Categories</option>
+          <option value="">All</option>
           <option value="Water">Water</option>
           <option value="Roads">Roads</option>
           <option value="Electricity">Electricity</option>
           <option value="Garbage">Garbage</option>
           <option value="Drainage">Drainage</option>
-          <option value="Lights">Street Lights</option>
+          <option value="Lights">Lights</option>
           <option value="Other">Other</option>
         </select>
       </div>
@@ -443,7 +559,7 @@
       <div class="filter-group">
         <label>Status</label>
         <select id="statusFilter">
-          <option value="">All Statuses</option>
+          <option value="">All</option>
           <option value="pending">Pending</option>
           <option value="in_progress">In Progress</option>
           <option value="resolved">Resolved</option>
@@ -456,20 +572,22 @@
         <input type="text" id="wardFilter" placeholder="Ward...">
       </div>
 
-      <div class="filter-group" style="justify-content: flex-end;">
+      <div class="filter-group">
         <label>&nbsp;</label>
-        <button class="filter-btn" onclick="applyFilters()">ðŸ” Filter</button>
+        <button class="filter-btn" onclick="applyFilters()">Filter</button>
       </div>
 
-      <div class="filter-group" style="justify-content: flex-end;">
+      <div class="filter-group">
         <label>&nbsp;</label>
-        <button class="filter-btn export-btn" onclick="exportToCSV()">ðŸ“¥ Export</button>
+        <button class="filter-btn export-btn" onclick="exportToCSV()">Export CSV</button>
       </div>
     </div>
 
+    <!-- Loading -->
     <div id="loading" class="loading">Loading complaints...</div>
 
-    <div id="tableContainer" style="display: none; overflow-x: auto;">
+    <!-- Table -->
+    <div id="tableContainer" class="table-wrapper" style="display: none;">
       <table>
         <thead>
           <tr>
@@ -489,11 +607,13 @@
       </table>
     </div>
 
+    <!-- No Data -->
     <div id="noData" class="no-data" style="display: none;">
       No complaints found. Try adjusting your filters.
     </div>
   </div>
 
+  <!-- Modal -->
   <div id="detailsModal" class="modal" onclick="closeModal(event)">
     <div class="modal-content" onclick="event.stopPropagation()">
       <span class="modal-close" onclick="closeModal()">&times;</span>
@@ -508,7 +628,8 @@
     const DASHBOARD_PASSWORD = 'complaints2025';
 
     const { createClient } = window.supabase;
-    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);    
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
     let allComplaints = [];
     let isAuthenticated = false;
 
@@ -533,6 +654,19 @@
       }
     };
 
+    function togglePassword() {
+      const input = document.getElementById('passwordInput');
+      const toggle = document.querySelector('.toggle-password');
+      
+      if (input.type === 'password') {
+        input.type = 'text';
+        toggle.textContent = '🙈';
+      } else {
+        input.type = 'password';
+        toggle.textContent = '👁️';
+      }
+    }
+
     function checkPassword() {
       const password = document.getElementById('passwordInput').value;
       const errorMsg = document.getElementById('errorMsg');
@@ -543,7 +677,7 @@
         errorMsg.textContent = '';
         showDashboard();
       } else {
-        errorMsg.textContent = 'âŒ Incorrect password. Please try again.';
+        errorMsg.textContent = 'Incorrect password. Please try again.';
         document.getElementById('passwordInput').value = '';
       }
     }
@@ -559,6 +693,14 @@
     function showDashboard() {
       document.getElementById('loginContainer').style.display = 'none';
       document.getElementById('dashboardContainer').style.display = 'block';
+      
+      // Clear filters
+      document.getElementById('search').value = '';
+      document.getElementById('severityFilter').value = '';
+      document.getElementById('categoryFilter').value = '';
+      document.getElementById('statusFilter').value = '';
+      document.getElementById('wardFilter').value = '';
+      
       loadComplaints();
     }
 
@@ -622,7 +764,7 @@
           <td><strong>${complaint.name || 'Unknown'}</strong></td>
           <td>${complaint.ward || '-'}</td>
           <td>${complaint.category || '-'}</td>
-          <td title="${complaint.complaint}" style="max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+          <td title="${complaint.complaint}" style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
             ${complaint.complaint || 'No complaint text'}
           </td>
           <td>
@@ -634,7 +776,7 @@
             <div class="emotion-bar">
               <div class="emotion-fill" style="width: ${emotionPercent}%"></div>
             </div>
-            <span style="font-size: 11px; color: #666; margin-left: 5px;">${emotionPercent}</span>
+            <span style="font-size: 10px; color: #666; margin-left: 3px;">${emotionPercent}</span>
           </td>
           <td>
             <select class="status-select status-${complaint.status}" 
@@ -651,7 +793,7 @@
               : '<span style="color: #999;">No recording</span>'}
           </td>
           <td>
-            <button class="view-btn" onclick="viewDetails('${complaint.id}')">ðŸ‘ï¸ View</button>
+            <button class="view-btn" onclick="viewDetails('${complaint.id}')">View</button>
           </td>
         `;
 
@@ -698,11 +840,11 @@
         const complaint = allComplaints.find(c => c.id === id);
         if (complaint) complaint.status = newStatus;
 
-        alert('âœ… Status updated successfully!');
+        alert('Status updated successfully!');
 
       } catch (error) {
         console.error('Error:', error);
-        alert('âŒ Failed to update status: ' + error.message);
+        alert('Failed to update status: ' + error.message);
       }
     }
 
@@ -713,72 +855,72 @@
       const modalContent = document.getElementById('modalContent');
       modalContent.innerHTML = `
         <div class="detail-row">
-          <div class="detail-label">ðŸ‘¤ Name</div>
+          <div class="detail-label">Name</div>
           <div class="detail-value">${complaint.name || 'Unknown'}</div>
         </div>
         <div class="detail-row">
-          <div class="detail-label">ðŸ“ Ward</div>
+          <div class="detail-label">Ward</div>
           <div class="detail-value">${complaint.ward || 'N/A'}</div>
         </div>
         <div class="detail-row">
-          <div class="detail-label">ðŸ“ž Phone</div>
+          <div class="detail-label">Phone</div>
           <div class="detail-value">${complaint.user_number || 'N/A'}</div>
         </div>
         <div class="detail-row">
-          <div class="detail-label">ðŸ“ Complaint</div>
+          <div class="detail-label">Complaint</div>
           <div class="detail-value">${complaint.complaint || 'No complaint text'}</div>
         </div>
         <div class="detail-row">
-          <div class="detail-label">ðŸ“Š Category</div>
+          <div class="detail-label">Category</div>
           <div class="detail-value">${complaint.category || 'N/A'}</div>
         </div>
         <div class="detail-row">
-          <div class="detail-label">â±ï¸ Duration</div>
+          <div class="detail-label">Duration</div>
           <div class="detail-value">${complaint.duration || 'N/A'}</div>
         </div>
         <div class="detail-row">
-          <div class="detail-label">ðŸŽ¯ Impact</div>
+          <div class="detail-label">Impact</div>
           <div class="detail-value">${complaint.impact || 'N/A'}</div>
         </div>
         <div class="detail-row">
-          <div class="detail-label">ðŸš¨ Severity</div>
+          <div class="detail-label">Severity</div>
           <div class="detail-value"><span class="severity-badge severity-${complaint.severity}">${complaint.severity || 'N/A'}</span></div>
         </div>
         <div class="detail-row">
-          <div class="detail-label">ðŸ˜  Emotion Score</div>
+          <div class="detail-label">Emotion Score</div>
           <div class="detail-value">${complaint.emotion || 0}/100</div>
         </div>
         <div class="detail-row">
-          <div class="detail-label">ðŸ“Œ Status</div>
+          <div class="detail-label">Status</div>
           <div class="detail-value">${complaint.status || 'N/A'}</div>
         </div>
         <div class="detail-row">
-          <div class="detail-label">â±ï¸ Call Duration</div>
+          <div class="detail-label">Call Duration</div>
           <div class="detail-value">${complaint.conversation_duration || 0} seconds</div>
         </div>
         <div class="detail-row">
-          <div class="detail-label">ðŸ’° Cost</div>
-          <div class="detail-value">â‚¹${complaint.total_cost || 0}</div>
+          <div class="detail-label">Cost</div>
+          <div class="detail-value">Rs.${complaint.total_cost || 0}</div>
         </div>
         <div class="detail-row">
-          <div class="detail-label">ðŸ“… Call Time</div>
+          <div class="detail-label">Call Time</div>
           <div class="detail-value">${complaint.call_created_at ? new Date(complaint.call_created_at).toLocaleString('en-IN') : 'N/A'}</div>
         </div>
         ${complaint.transcript ? `
         <div class="detail-row">
-          <div class="detail-label">ðŸ“œ Transcript</div>
+          <div class="detail-label">Transcript</div>
           <div class="detail-value" style="white-space: pre-wrap; max-height: 200px; overflow-y: auto;">${complaint.transcript}</div>
         </div>
         ` : ''}
         ${complaint.summary ? `
         <div class="detail-row">
-          <div class="detail-label">ðŸ“‹ Summary</div>
+          <div class="detail-label">Summary</div>
           <div class="detail-value">${complaint.summary}</div>
         </div>
         ` : ''}
         ${complaint.recording_url ? `
         <div class="detail-row">
-          <div class="detail-label">ðŸŽ¤ Recording</div>
+          <div class="detail-label">Recording</div>
           <div class="detail-value">
             <audio controls style="width: 100%;"><source src="${complaint.recording_url}" type="audio/mpeg"></audio>
           </div>
