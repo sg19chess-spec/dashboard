@@ -26,12 +26,13 @@
     }
 
     .login-half {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 40px;
-    }
+  flex: 1; /* ❌ REMOVE THIS */
+  height: 50vh; /* ✅ ADD THIS - Fixed 50% height */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+}
 
     .login-half.black {
       background: #1a1a1a;
