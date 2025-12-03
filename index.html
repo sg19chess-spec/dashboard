@@ -254,6 +254,8 @@
 
     td {
       padding: 10px 8px;
+      overflow: visible;  /* Prevent dropdown from being cut */
+
       border-bottom: 1px solid #e9ecef;
       font-size: 12px;
     }
@@ -276,14 +278,15 @@
     .severity-YELLOW { background: #fffde7; color: #f9a825; }
 
     .status-select {
-      padding: 5px 8px;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      font-size: 11px;
-      cursor: pointer;
-      width: 100%;
-      max-width: 120px;
-    }
+  padding: 6px 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+  width: 100%;
+  min-width: 110px;
+}
+
 
     .status-pending { background: #fff3e0; color: #f57c00; }
     .status-in_progress { background: #e3f2fd; color: #1976d2; }
@@ -427,6 +430,7 @@
       }
 
       table {
+        min-width: 100% ;
         font-size: 11px;
       }
 
@@ -448,6 +452,12 @@
         padding: 30px 20px;
       }
     }
+@media (max-width: 768px) {
+  .header > div:last-child {
+    width: 100%;
+    justify-content: space-between;
+  }
+}
 
     @media (max-width: 480px) {
       .stats {
@@ -498,12 +508,34 @@
   <!-- Dashboard -->
   <div id="dashboardContainer" class="dashboard-container">
     <div class="header">
-      <div>
-        <h1>KRN Dashboard</h1>
-        <p class="subtitle">Real-time complaint monitoring and management</p>
+  <div>
+    <h1>KRN Dashboard</h1>
+    <p class="subtitle">Real-time complaint monitoring and management</p>
+  </div>
+
+  <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+    
+    <!-- ✅ Compact Billing Box Near Logout -->
+    <div style="
+      background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+      color: white;
+      padding: 8px 12px;
+      border-radius: 8px;
+      box-shadow: 0 3px 5px rgba(0,0,0,0.15);
+      font-size: 12px;
+      min-width: 150px;
+      text-align: right;
+    ">
+      <div style="opacity: 0.9;">Unbilled</div>
+      <div style="font-size: 18px; font-weight: bold;" id="totalBill">Rs.0</div>
+      <div style="font-size: 11px; opacity: 0.8;">
+        <span id="unbilledCount">0</span> calls
       </div>
-      <button onclick="logout()" class="logout-btn">Logout</button>
     </div>
+
+    <button onclick="logout()" class="logout-btn">Logout</button>
+  </div>
+</div>
 
 <div class="stats">
   <div class="stat-card">
@@ -524,22 +556,6 @@
   </div>
 </div>
 
-<!-- Simple Billing Card -->
-<div style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; padding: 20px; border-radius: 12px; margin: 20px 0; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-  <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
-    <div>
-      <h3 style="margin-bottom: 10px; font-size: 16px; opacity: 0.9;">Current Unbilled Amount</h3>
-      <div style="font-size: 32px; font-weight: bold;" id="totalBill">Rs.0</div>
-      <div style="font-size: 13px; opacity: 0.9; margin-top: 5px;">
-        <span id="unbilledCount">0</span> unbilled calls
-      </div>
-    </div>
-    <div style="text-align: right;">
-      <div style="font-size: 12px; opacity: 0.9; margin-bottom: 5px;">Actual Cost</div>
-      <div style="font-size: 20px; font-weight: bold;" id="actualCostDisplay">Rs.0</div>
-    </div>
-  </div>
-</div>
     <!-- Filters -->
     <div class="filters">
       <div class="filter-group">
@@ -746,25 +762,23 @@
 
   // ✅ NEW FUNCTION
   async function loadBillingTotal() {
-    try {
-      const { data, error, count } = await supabase
-        .from('complaints')
-        .select('total_cost, billed_amount', { count: 'exact' })
-        .eq('is_billed', false);
+  try {
+    const { data, error, count } = await supabase
+      .from('complaints')
+      .select('billed_amount', { count: 'exact' })
+      .eq('is_billed', false);
 
-      if (error) throw error;
+    if (error) throw error;
 
-      const totalCost = data.reduce((sum, c) => sum + (c.total_cost || 0), 0);
-      const billAmount = data.reduce((sum, c) => sum + (c.billed_amount || 0), 0);
+    const billAmount = data.reduce((sum, c) => sum + (c.billed_amount || 0), 0);
 
-      document.getElementById('unbilledCount').textContent = count || 0;
-      document.getElementById('actualCostDisplay').textContent = 'Rs.' + totalCost.toFixed(2);
-      document.getElementById('totalBill').textContent = 'Rs.' + billAmount.toFixed(2);
+    document.getElementById('unbilledCount').textContent = count || 0;
+    document.getElementById('totalBill').textContent = 'Rs.' + billAmount.toFixed(2);
 
-    } catch (error) {
-      console.error('Error loading billing:', error);
-    }
+  } catch (error) {
+    console.error('Error loading billing:', error);
   }
+}
 
   function updateStats(data) {
     document.getElementById('total').textContent = data.length;
@@ -934,10 +948,6 @@
       <div class="detail-row">
         <div class="detail-label">Call Duration</div>
         <div class="detail-value">${complaint.conversation_duration || 0} seconds</div>
-      </div>
-      <div class="detail-row">
-        <div class="detail-label">Actual Cost</div>
-        <div class="detail-value">Rs.${(complaint.total_cost || 0).toFixed(2)}</div>
       </div>
       <div class="detail-row">
         <div class="detail-label">Billed Amount</div>
