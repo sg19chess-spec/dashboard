@@ -26,12 +26,14 @@
     }
 
     .login-half {
-  flex: 1; /* ❌ REMOVE THIS */
-  height: 50vh; /* ✅ ADD THIS - Fixed 50% height */
+  height: 50vh; /* ✅ Exactly 50% of viewport height */
+  min-height: 50vh; /* ✅ Force minimum 50% */
+  max-height: 50vh; /* ✅ Force maximum 50% */
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 40px;
+  overflow: visible; /* ✅ Allow login box to overflow */
 }
 
     .login-half.black {
@@ -43,13 +45,15 @@
     }
 
     .login-box {
-      background: white;
-      padding: 50px 40px;
-      border-radius: 8px;
-      box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-      max-width: 400px;
-      width: 100%;
-    }
+  background: white;
+  padding: 50px 40px;
+  border-radius: 8px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+  max-width: 400px;
+  width: 100%;
+  position: relative; /* ✅ ADD THIS */
+  z-index: 10; /* ✅ ADD THIS - Keep box on top */
+}
 
     .login-box h1 {
       color: #1a1a1a;
