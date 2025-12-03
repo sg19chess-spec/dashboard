@@ -23,6 +23,8 @@
       display: flex;
       flex-direction: column;
       min-height: 100vh;
+        position: relative; /* ✅ ADD THIS */
+
     }
 
     .login-half {
@@ -51,8 +53,13 @@
   box-shadow: 0 10px 40px rgba(0,0,0,0.3);
   max-width: 400px;
   width: 100%;
-  position: relative; /* ✅ ADD THIS */
-  z-index: 10; /* ✅ ADD THIS - Keep box on top */
+  
+  /* ✅ THESE LINES MAKE IT FLOAT IN THE CENTER */
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 10;
 }
 
     .login-box h1 {
@@ -555,24 +562,24 @@
 <body>
   <!-- Login Screen -->
   <div id="loginContainer">
-    <div class="login-half black">
-      <div class="login-box">
-        <h1>KRN Dashboard</h1>
-        <p>Complaint Management System</p>
-        <div class="password-wrapper">
-          <input type="password" id="passwordInput" class="login-input" placeholder="Enter password" />
-          <span class="toggle-password" onclick="togglePassword()">👁️</span>
-        </div>
-        <button onclick="checkPassword()" class="login-btn">Login</button>
-        <div id="errorMsg" class="error-msg"></div>
-      </div>
-    </div>
+    <div class="login-half black"></div>
     <div class="login-half red"></div>
+    
+    <!-- ✅ LOGIN BOX MOVED OUTSIDE BOTH HALVES -->
+    <div class="login-box">
+      <h1>KRN Dashboard</h1>
+      <p>Complaint Management System</p>
+      <div class="password-wrapper">
+        <input type="password" id="passwordInput" class="login-input" placeholder="Enter password" />
+        <span class="toggle-password" onclick="togglePassword()">👁️</span>
+      </div>
+      <button onclick="checkPassword()" class="login-btn">Login</button>
+      <div id="errorMsg" class="error-msg"></div>
+    </div>
   </div>
 
   <!-- Dashboard -->
   <div id="dashboardContainer" class="dashboard-container">
-    <!-- Header -->
     <div class="dashboard-header">
       <div>
         <h1>KRN Dashboard</h1>
